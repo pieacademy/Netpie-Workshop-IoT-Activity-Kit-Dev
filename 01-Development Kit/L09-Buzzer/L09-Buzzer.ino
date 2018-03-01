@@ -1,4 +1,4 @@
-int buzzerPin = D8;
+#define buzzerPin D8
 
 void setup() {
   pinMode(buzzerPin, OUTPUT);

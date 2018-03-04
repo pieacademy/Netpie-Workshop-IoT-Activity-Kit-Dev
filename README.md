@@ -29,8 +29,8 @@ https://docs.google.com/presentation/d/1CVVMUmzohI6iAcwXFtlWaP4GrJvXIkecn1DYi3Wh
 ### Part 5: Freeboard
 https://docs.google.com/presentation/d/1N8GckSPBg_t-Dq24x-XSO4mmsaih3y2B1_aruE8rOxk
 
-### Part 6: Freeboard
-https://docs.google.com/presentation/d/1N8GckSPBg_t-Dq24x-XSO4mmsaih3y2B1_aruE8rOxk
+### Part 6: Rest API
+
 
 ### Part 7: Conclusion
 https://docs.google.com/presentation/d/1BX-pk7GQaViUM_5WQR1PiuW_5oWW6htMYZ3VBtQ9-uA

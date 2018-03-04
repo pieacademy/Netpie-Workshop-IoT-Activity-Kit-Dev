@@ -1,0 +1,65 @@
+<script src="../jquery.js"></script>
+<script src="../netpie.feedview.js"></script>
+<script>
+var feedid = "feedid";
+var apikey = "apikey";
+var granularity = "1minutes"; //ex. 15seconds,15minutes,1hours,1days
+var since = "1hours"; //ex. 1hours,1days,1months
+var option = {
+    title: "title", //text
+    xaxis: "time", //text
+    yaxis: "value", //text
+    multipleaxis: true, //true,false
+    yzero: false, //true,false
+    color: "pink,blue,yellow",
+    type: "line", //line,step 
+    marker: true, //true,false
+    filter: "", //field name
+    autogap: true //true,false
+}
+
+//ex. since
+setInterval(function insertGraph() {
+    $.getJSON("https://api.netpie.io/feed/" + feedid + "?apikey=" + apikey + "&granularity=" + granularity + "&since=" + since,
+        function(datajson) {
+            updateChart('chart', datajson, option);
+        });
+    return insertGraph;
+}(), 15000);
+
+function export_csv() {
+
+    var xhttp = new XMLHttpRequest();
+    var param = "?apikey=" + apikey + "&granularity=" + granularity + "&since=" + since + "&format=csv";
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var blob = new Blob([decodeURI(this.responseText)], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement("a");
+            if (link.download !== undefined) { // feature detection
+                // Browsers that support HTML5 download attribute
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", feedid + '.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } else {
+            //error
+        }
+    };
+    xhttp.open("GET", "https://api.netpie.io/feed/"+ feedid + param, true);
+    xhttp.timeout = 10000;
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    xhttp.send();
+}
+</script>
+
+<body style="margin: 0px;overflow: hidden;background-color: inherit;" id="body">
+    <div style="width:100vw;height:90vh;" id="main">
+        <div id="chart"></div>
+    </div>
+    <button onclick="export_csv()">Export csv</button>
+</body>

@@ -1,0 +1,221 @@
+<script src="../../jquery.js"></script>
+<link href="../../netpie.theme.css" rel="stylesheet" />
+<script src="../../netpie.feedview.js"></script>
+<script>
+    var data = {};
+    var timelist ={seconds:1000,minutes:1000*60,hours:1000*60*60,days:1000*60*60*24,months:1000*60*60*24*30,years:1000*60*60*24*30*12}
+	var parameter = {feedid:null,apikey:null,granularity_value:"15",granularity_unit:"minutes",since_value:"24",since_unit:"hours"};
+	var option = {};
+    var path = window.location.href.split('?');
+    var params = path[1].split('&');
+
+    for (var i = 0; i < params.length; i++) {
+        var nv = params[i].split('=');
+        if (!nv[0]) continue;
+        if(nv[0]=="feedid"||nv[0]=="apikey"||nv[0]=="granularity"||nv[0]=="since"||nv[0]=="from"||nv[0]=="to"){
+            if(nv[0]=="granularity"||nv[0]=="since"){
+                var datastring = decodeURIComponent(nv[1].replace(/\+/g,  " "));
+                datastring = datastring.split(/(\d+)/);
+                parameter[nv[0]+"_value"] = datastring[1];
+                parameter[nv[0]+"_unit"] = datastring[2];
+            }
+            else if(nv[0]=="from"||nv[0]=="to"){
+                parameter[nv[0]+"_value"] = decodeURIComponent(nv[1].replace(/\+/g,  " "));
+            }
+            else{
+                parameter[nv[0]] = decodeURIComponent(nv[1].replace(/\+/g,  " "));
+            }
+        }
+        else{
+        	
+            if(nv[0]=="multipleaxis"||nv[0]=="marker"||nv[0]=="yzero"||nv[0]=="autogap"){
+                option[nv[0]] = (decodeURIComponent(nv[1].replace(/\+/g,  " ")) == 'true');
+            }
+            else{
+                option[nv[0]] = decodeURIComponent(nv[1].replace(/\+/g,  " "));
+            }
+        }
+    }
+
+    function reloadhData(s) {
+        if(typeof data['data'] !== "undefined"){
+            var timenow = new Date().getTime();
+            var lasttime;
+            for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                for (var j = 0; j<data['data']['data'][i]['values'].length; j++) {
+                    if(typeof data['data']['data'][i]['values'][j] !== "undefined"){
+                        if(data['data']['data'][i]['values'][j][0]+s.since_value*timelist[s.since_unit]<timenow){
+                            data['data']['data'][i]['values'].splice(j, 1)
+                        }
+                    }
+                    lasttime = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                }
+            }
+
+            var apiurl = 'https://api.netpie.io/feed/'+s.feedid+'?apikey='+s.apikey+'&granularity='+s.granularity+'&aggregate=avg&from='+lasttime+'&to='+timenow;
+            $.getJSON( apiurl, function(datajson) {
+                if(typeof datajson['lastest_data'] !== "undefined"){
+                    for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                        data['data']['data'][i]['values'].splice(data['data']['data'][i]['values'].length-1, 1)
+                        data['data']['data'][i]['values'] = data['data']['data'][i]['values'].concat(datajson['data'][i]['values']);
+                    }
+                    data['data']['to'] = timenow;
+                    updateChart('chart',data['data'],option);
+                }
+            });
+        }
+        else{
+            var apiurl = 'https://api.netpie.io/feed/'+s.feedid+'?apikey='+s.apikey+'&granularity='+s.granularity+'&aggregate=avg&since='+s.since;
+            $.getJSON( apiurl, function(datajson) {
+                data['data'] = datajson;
+                var newfrom;
+                var newto;
+                if(typeof data['data']['lastest_data'] !== "undefined"){
+                    for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                        var timelastitem = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                        if(data['data']['lastest_data'][i]['values'][0][0]>timelastitem+timelist[data['data']['granularity'][1]]*data['data']['granularity'][0]){
+                            if(typeof newfrom === "undefined"){
+                                newfrom = timelastitem+1000;
+                                newto = data['data']['lastest_data'][i]['values'][0][0];
+                            }
+                            else{
+                                if(newfrom>timelastitem){
+                                    newfrom = timelastitem;
+                                }
+                            }
+                        }
+                    }
+                }
+                updateChart('chart',data['data'],option);
+                if(typeof newfrom !== "undefined"){
+                    reloadjData(s,newfrom,newto)
+                }                
+            });
+        }
+    }
+    function reloadiData(s) {
+        if(typeof data['data'] !== "undefined"){
+            var timenow = new Date().getTime();
+            var timelastitem;
+            for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                if(typeof timelastitem === "undefined"){
+                    timelastitem = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                }
+                else{
+                    if(timelastitem<data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0]){
+                        timelastitem = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                    }
+                }
+                 
+            }
+            if(timelastitem+s.granularity_value*timelist[s.granularity_unit]<s.to_value){
+                var apiurl = 'https://api.netpie.io/feed/'+s.feedid+'?apikey='+s.apikey+'&granularity='+s.granularity_value+s.granularity_unit+'&aggregate=avg&from='+timelastitem+'&to='+s.to_value;
+                $.getJSON( apiurl, function(datajson) {
+                    if(typeof datajson['lastest_data'] !== "undefined"){
+                        for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                            data['data']['data'][i]['values'].splice(data['data']['data'][i]['values'].length-1, 1);
+                            data['data']['data'][i]['values'] = data['data']['data'][i]['values'].concat(datajson['data'][i]['values']);
+                        }
+                        updateChart('chart',data['data'],option);
+                    }
+                });
+            }
+            
+        }
+        else{
+            var apiurl = 'https://api.netpie.io/feed/'+s.feedid+'?apikey='+s.apikey+'&granularity='+s.granularity_value+s.granularity_unit+'&aggregate=avg&from='+s.from_value+'&to='+s.to_value;
+            $.getJSON( apiurl, function(datajson) {
+                data['data'] = datajson;
+                var newfrom;
+                var newto;
+                if(typeof data['data']['lastest_data'] !== "undefined"){
+                    for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                        var timelastitem = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                        if(data['data']['lastest_data'][i]['values'][0][0]>timelastitem+timelist[data['data']['granularity'][1]]*data['data']['granularity'][0]){
+                            if(typeof newfrom === "undefined"){
+                                newfrom = timelastitem+1000;
+                                newto = data['data']['lastest_data'][i]['values'][0][0];
+                            }
+                            else{
+                                if(newfrom>timelastitem){
+                                    newfrom = timelastitem;
+                                }
+                            }
+                        }
+                    }
+                }
+                updateChart('chart',data['data'],option);
+                if(typeof newfrom !== "undefined"){
+                    reloadjData(s,newfrom,newto)
+                }                
+            });
+        }
+    }
+
+    function reloadjData(s,from,to) {
+        var apiurl = 'https://api.netpie.io/feed/'+s.feedid+'?apikey='+s.apikey+'&granularity='+s.granularity_value+s.granularity_unit+'&aggregate=avg&from='+from+'&to='+to;
+        $.getJSON( apiurl, function(datajson) {
+            for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                data['data']['data'][i]['values'] = data['data']['data'][i]['values'].concat(datajson['data'][i]['values']);
+            }
+            var newfrom;
+            var newto;
+            for (var i = 0; i<data['data']['lastest_data'].length ; i++) {
+                var timelastitem = data['data']['data'][i]['values'][data['data']['data'][i]['values'].length-1][0];
+                if(data['data']['lastest_data'][i]['values'][0][0]>timelastitem+timelist[data['data']['granularity'][1]]*data['data']['granularity'][0]){
+                    if(typeof newfrom === "undefined"){
+                        newfrom = timelastitem+1000;
+                        newto = data['data']['lastest_data'][i]['values'][0][0];
+                    }
+                    else{
+                        if(newfrom>timelastitem){
+                            newfrom = timelastitem;
+                        }
+                    }
+                }
+            }
+            updateChart('chart',data['data'],option);
+            if(typeof newfrom !== "undefined"){
+                reloadjData(s,newfrom,newto)
+            }
+        });
+    }
+</script>
+
+<body style="margin: 0px;overflow: hidden;background-color: inherit;" id="body">
+	<div style="width:100vw;height:100vh;" id="main">
+	    <div id="chart"></div>
+	</div>
+    <script>
+        if(parameter["feedid"]!=null&parameter["apikey"]!=null){
+            if(typeof parameter["from_value"] !== 'undefined' && typeof parameter["to_value"] !== 'undefined'){
+                setInterval(function insertGraph() {
+                    reloadiData(parameter)
+                    return insertGraph;
+                }(), 15000);
+            }
+            else{
+                setInterval(function insertGraph() {
+                    reloadhData(parameter)
+                    return insertGraph;
+                }(), 15000);
+            }
+            
+        }
+        else{
+            $('#chart').html('Error : Feedid and/or Apikey is undefined.<br><br>Please check again.')
+            $('#main').css({
+                margin: "0",
+                padding: "0",
+                display: "table"
+            })
+            $('#chart').css({
+                display: "table-cell",
+                "text-align": "center",
+                "vertical-align": "middle",
+                backgroundColor: "#F1F1F1",
+                font: '14px/0.8em Trebuchet, Arial, sans-serif',
+            })
+        }
+    </script>
+</body>

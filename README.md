@@ -32,6 +32,7 @@ https://docs.google.com/presentation/d/1N8GckSPBg_t-Dq24x-XSO4mmsaih3y2B1_aruE8r
 ### Part 6: Node Pie
 
 ### Part 7: Rest API
+https://docs.google.com/presentation/d/1klUuLZmEXhRYT8nT_0OHn0gZq_tQwI96bFoRt293GMc
 
 ### Part 8: Conclusion
 https://docs.google.com/presentation/d/1BX-pk7GQaViUM_5WQR1PiuW_5oWW6htMYZ3VBtQ9-uA

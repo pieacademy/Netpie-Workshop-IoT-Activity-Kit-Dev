@@ -36,4 +36,4 @@ https://docs.google.com/presentation/d/1Xv9unTv_Pm-kspFjR_jZ6_Db6_Xd3QBX1PhCA3Ow
 https://docs.google.com/presentation/d/1klUuLZmEXhRYT8nT_0OHn0gZq_tQwI96bFoRt293GMc
 
 ### Part 8: Conclusion
-https://docs.google.com/presentation/d/1BX-pk7GQaViUM_5WQR1PiuW_5oWW6htMYZ3VBtQ9-uA
+https://docs.google.com/presentation/d/12khqMKGaLZHA7ziDaLtrh9HJa1HSCZeL6mmhp0vcyM8
